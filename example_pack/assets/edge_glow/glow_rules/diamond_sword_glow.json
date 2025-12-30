@@ -1,9 +1,9 @@
 {
   "items": ["minecraft:diamond_sword"],
   "particle": "edge_glow:glow",
-  "spawn_rate": 0.3,
+  "spawn_rate": 0.5,
   "alpha_threshold": 0.1,
   "gradient_start": "#33EBCB",
   "gradient_end": "#00AAAA",
-  "name_pattern": "Glow"
+  "name_pattern": ".*Glow.*"
 }

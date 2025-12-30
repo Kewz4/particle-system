@@ -27,7 +27,7 @@ public class GlowParticle extends Particle {
         super(level, x, y, z, vx, vy, vz);
         this.friction = 0.96F;
         this.gravity = 0;
-        this.baseSize = 0.1F; // Define our own size field
+        this.baseSize = 0.2F; // Increased size for visibility
         this.lifetime = 20 + this.random.nextInt(10);
 
         this.startColor = options.getStartColor();
@@ -132,7 +132,11 @@ public class GlowParticle extends Particle {
             RenderSystem.disableCull();
             RenderSystem.depthMask(false);
             RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
+            // Additive Blending for Glow Effect
+            RenderSystem.blendFunc(com.mojang.blaze3d.platform.GlStateManager.SourceFactor.SRC_ALPHA, com.mojang.blaze3d.platform.GlStateManager.DestFactor.ONE);
+            // Disable depth test to ensure it renders on top of the item if clipped
+            RenderSystem.disableDepthTest();
+
             RenderSystem.setShader(GameRenderer::getPositionColorShader);
             builder.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
         }
@@ -140,6 +144,9 @@ public class GlowParticle extends Particle {
         @Override
         public void end(Tesselator tesselator) {
             tesselator.end();
+            // Restore default states just in case
+            RenderSystem.enableDepthTest();
+            RenderSystem.defaultBlendFunc();
         }
 
         @Override

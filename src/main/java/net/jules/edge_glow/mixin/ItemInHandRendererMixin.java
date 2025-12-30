@@ -27,7 +27,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.awt.Color;
 import java.util.List;
 
 @Mixin(ItemInHandRenderer.class)
@@ -42,9 +41,9 @@ public class ItemInHandRendererMixin {
         if (config == null) return;
 
         if (config.name_pattern != null && !config.name_pattern.isEmpty()) {
-            // Check if display name matches pattern
-            if (!stack.getHoverName().getString().matches(config.name_pattern)) {
-                return;
+            String displayName = stack.getHoverName().getString();
+            if (!displayName.matches(config.name_pattern)) {
+                 return;
             }
         }
 
@@ -103,7 +102,7 @@ public class ItemInHandRendererMixin {
                 Vector2f edge = edges.get((int) (Math.random() * edges.size()));
 
                 float lx = edge.x;
-                float ly = 1.0f - edge.y;
+                float ly = 1.0f - edge.y; // Correct UV Y flip for standard model mapping
                 float lz = 0.5f + (float)(Math.random() * 0.06 - 0.03);
 
                 Vector4f vec = new Vector4f(lx, ly, lz, 1.0f);
