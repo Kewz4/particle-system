@@ -1,0 +1,6 @@
+{
+  "items": ["minecraft:diamond_sword"],
+  "particle": "edge_glow:glow",
+  "spawn_rate": 0.3,
+  "alpha_threshold": 0.1
+}

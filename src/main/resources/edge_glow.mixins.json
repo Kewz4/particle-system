@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.jules.edge_glow.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "edge_glow.mixins.refmap.json",
+  "mixins": [
+    "ItemInHandRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
