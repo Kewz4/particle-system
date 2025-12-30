@@ -121,7 +121,7 @@ public class ItemInHandRendererMixin {
                 float lz = 0.5f + (float)(Math.random() * 0.06 - 0.03);
 
                 Vector4f vec = new Vector4f(lx, ly, lz, 1.0f);
-                vec.mul(pose);
+                pose.transform(vec);
 
                 double wx = vec.x + cameraPos.x;
                 double wy = vec.y + cameraPos.y;
