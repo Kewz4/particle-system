@@ -7,6 +7,7 @@ public class GlowConfig {
     public List<ResourceLocation> items;
     public ResourceLocation particle;
     public String color_matcher; // Optional hex
+    public String name_pattern;   // Optional Regex for Item Name
     public String gradient_start; // Hex Color
     public String gradient_end;   // Hex Color
     public float spawn_rate;

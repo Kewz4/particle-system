@@ -41,6 +41,13 @@ public class ItemInHandRendererMixin {
         GlowConfig config = ConfigLoader.ITEM_RULES.get(stack.getItem());
         if (config == null) return;
 
+        if (config.name_pattern != null && !config.name_pattern.isEmpty()) {
+            // Check if display name matches pattern
+            if (!stack.getHoverName().getString().matches(config.name_pattern)) {
+                return;
+            }
+        }
+
         if (displayContext != ItemDisplayContext.FIRST_PERSON_RIGHT_HAND && displayContext != ItemDisplayContext.FIRST_PERSON_LEFT_HAND) {
             return;
         }

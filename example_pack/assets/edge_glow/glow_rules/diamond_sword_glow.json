@@ -4,5 +4,6 @@
   "spawn_rate": 0.3,
   "alpha_threshold": 0.1,
   "gradient_start": "#33EBCB",
-  "gradient_end": "#00AAAA"
+  "gradient_end": "#00AAAA",
+  "name_pattern": "Glow"
 }
