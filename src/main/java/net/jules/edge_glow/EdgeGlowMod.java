@@ -4,8 +4,6 @@ import com.mojang.logging.LogUtils;
 import net.jules.edge_glow.config.ConfigLoader;
 import net.jules.edge_glow.init.ModParticles;
 import net.jules.edge_glow.particle.GlowParticle;
-import net.minecraft.client.Minecraft;
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
@@ -41,6 +39,7 @@ public class EdgeGlowMod {
     }
 
     public void registerParticles(RegisterParticleProvidersEvent event) {
-         event.registerSpriteSet(ModParticles.GLOW.get(), GlowParticle.Provider::new);
+        // Register without SpriteSet
+        event.registerSpecial(ModParticles.GLOW.get(), new GlowParticle.Provider(null));
     }
 }

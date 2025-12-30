@@ -5,6 +5,8 @@ import net.jules.edge_glow.config.ConfigLoader;
 import net.jules.edge_glow.config.GlowConfig;
 import net.jules.edge_glow.logic.EdgeDetector;
 import net.jules.edge_glow.logic.PointCache;
+import net.jules.edge_glow.particle.GlowParticleOptions;
+import net.jules.edge_glow.init.ModParticles;
 import net.jules.edge_glow.utils.TexturePixelReader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemInHandRenderer;
@@ -25,6 +27,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.awt.Color;
 import java.util.List;
 
 @Mixin(ItemInHandRenderer.class)
@@ -35,28 +38,23 @@ public class ItemInHandRendererMixin {
         if (Minecraft.getInstance().isPaused()) return;
         if (stack.isEmpty()) return;
 
-        // Check config
         GlowConfig config = ConfigLoader.ITEM_RULES.get(stack.getItem());
         if (config == null) return;
 
-        // Check Display Context (First Person Only as requested)
         if (displayContext != ItemDisplayContext.FIRST_PERSON_RIGHT_HAND && displayContext != ItemDisplayContext.FIRST_PERSON_LEFT_HAND) {
             return;
         }
 
-        // Retrieve Model and Sprite
         BakedModel model = Minecraft.getInstance().getItemRenderer().getModel(stack, entity.level(), entity, 0);
         TextureAtlasSprite sprite = model.getParticleIcon();
         if (sprite == null) return;
 
         ResourceLocation spriteId = sprite.contents().name();
 
-        // Get or Compute Edges
         List<Vector2f> edges;
         if (PointCache.has(spriteId)) {
             edges = PointCache.get(spriteId);
         } else {
-            // Compute
             var nativeImageOpt = TexturePixelReader.getImageFromSprite(sprite);
             if (nativeImageOpt.isPresent()) {
                 edges = EdgeDetector.detectEdges(nativeImageOpt.get(), config.alpha_threshold, 1);
@@ -73,35 +71,29 @@ public class ItemInHandRendererMixin {
         if (count <= 0 && config.spawn_rate > 0 && Math.random() < config.spawn_rate) count = 1;
 
         if (count > 0) {
-            // Push pose to apply item transforms
             poseStack.pushPose();
-            // Apply the item's display transform (e.g. rotation, scale in hand)
             model.getTransforms().getTransform(displayContext).apply(leftHand, poseStack);
-
-            // Apply translations to center the item model if needed
-            // Standard items render centered at 0.5, 0.5, 0.5 inside the block/item renderer,
-            // but here we are in the hand renderer.
-            // The item transform assumes the origin is the "handle".
-            // We'll proceed with the assumption that our 0-1 UVs need to be mapped to -0.5 to 0.5 or 0 to 1 depending on how the model is built.
-            // Usually, generated item models (2D) are centered.
-            // Let's assume standard behavior: 0.5, 0.5, 0.5 is center.
 
             Matrix4f pose = poseStack.last().pose();
             Vector3f cameraPos = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition().toVector3f();
 
-            poseStack.popPose(); // We have the matrix, we can pop now.
+            poseStack.popPose();
+
+            net.minecraft.core.particles.ParticleOptions particleOptions = null;
+
+            // Determine Particle Options
+            if (config.particle.equals(ModParticles.GLOW.getId())) {
+                Vector3f start = parseColor(config.gradient_start);
+                Vector3f end = parseColor(config.gradient_end);
+                particleOptions = new GlowParticleOptions(start, end);
+            } else if (ForgeRegistries.PARTICLE_TYPES.containsKey(config.particle)) {
+                 particleOptions = (net.minecraft.core.particles.ParticleOptions) ForgeRegistries.PARTICLE_TYPES.getValue(config.particle);
+            }
+
+            if (particleOptions == null) return;
 
             for (int i = 0; i < count; i++) {
                 Vector2f edge = edges.get((int) (Math.random() * edges.size()));
-
-                // Map UV to 3D.
-                // In generated models, the texture is on the Z-plane.
-                // We need to map UV (0..1) to X/Y coordinates.
-                // Standard mapping: X = u, Y = 1-v (or v inverted).
-                // Centering: usually items are rendered such that (0.5, 0.5) is the pivot?
-                // Actually, 'Generated' models usually extend from 0 to 1 in X and Y.
-                // But the 'GUI' transform or 'First Person' transform scales/translates it.
-                // Let's assume 0..1 range first.
 
                 float lx = edge.x;
                 float ly = 1.0f - edge.y;
@@ -118,13 +110,21 @@ public class ItemInHandRendererMixin {
                 double vy = (Math.random() - 0.5) * 0.01;
                 double vz = (Math.random() - 0.5) * 0.01;
 
-                if (ForgeRegistries.PARTICLE_TYPES.containsKey(config.particle)) {
-                     entity.level().addParticle(
-                         (net.minecraft.core.particles.ParticleOptions) ForgeRegistries.PARTICLE_TYPES.getValue(config.particle),
-                         wx, wy, wz, vx, vy, vz
-                     );
-                }
+                entity.level().addParticle(particleOptions, wx, wy, wz, vx, vy, vz);
             }
+        }
+    }
+
+    private Vector3f parseColor(String hex) {
+        try {
+            if (hex.startsWith("#")) hex = hex.substring(1);
+            int color = Integer.parseInt(hex, 16);
+            float r = ((color >> 16) & 0xFF) / 255.0f;
+            float g = ((color >> 8) & 0xFF) / 255.0f;
+            float b = (color & 0xFF) / 255.0f;
+            return new Vector3f(r, g, b);
+        } catch (Exception e) {
+            return new Vector3f(1, 1, 1);
         }
     }
 }
