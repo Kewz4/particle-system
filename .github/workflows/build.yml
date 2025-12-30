@@ -16,8 +16,13 @@ jobs:
         run: chmod +x gradlew
       - name: Build with Gradle
         run: ./gradlew build
+      - name: Bundle Artifacts
+        run: |
+          mkdir release_artifacts
+          cp build/libs/*.jar release_artifacts/
+          cd example_pack && zip -r ../release_artifacts/example_resource_pack.zip . && cd ..
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: edge-glow-mod
-          path: build/libs/*.jar
+          name: edge-glow-release
+          path: release_artifacts/
