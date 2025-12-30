@@ -25,7 +25,7 @@ public class ConfigLoader extends SimpleJsonResourceReloadListener {
     @Override
     protected void apply(Map<ResourceLocation, JsonElement> objects, ResourceManager resourceManager, ProfilerFiller profiler) {
         ITEM_RULES.clear();
-        EdgeGlowMod.LOGGER.info("Loading Edge Glow rules...");
+        EdgeGlowMod.LOGGER.info("EdgeGlow: Loading rules from data pack...");
 
         for (Map.Entry<ResourceLocation, JsonElement> entry : objects.entrySet()) {
             ResourceLocation id = entry.getKey();
@@ -36,15 +36,16 @@ public class ConfigLoader extends SimpleJsonResourceReloadListener {
                         Item item = ForgeRegistries.ITEMS.getValue(itemId);
                         if (item != null) {
                             ITEM_RULES.put(item, config);
+                            EdgeGlowMod.LOGGER.info("EdgeGlow: Registered rule for item {}", itemId);
                         } else {
-                             EdgeGlowMod.LOGGER.warn("Item not found for rule {}: {}", id, itemId);
+                             EdgeGlowMod.LOGGER.warn("EdgeGlow: Item not found for rule {}: {}", id, itemId);
                         }
                     }
                 }
             } catch (Exception e) {
-                EdgeGlowMod.LOGGER.error("Failed to load glow rule: {}", id, e);
+                EdgeGlowMod.LOGGER.error("EdgeGlow: Failed to load glow rule: {}", id, e);
             }
         }
-        EdgeGlowMod.LOGGER.info("Loaded {} item glow rules.", ITEM_RULES.size());
+        EdgeGlowMod.LOGGER.info("EdgeGlow: Loaded {} item glow rules.", ITEM_RULES.size());
     }
 }
