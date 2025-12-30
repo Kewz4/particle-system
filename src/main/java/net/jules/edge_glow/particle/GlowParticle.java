@@ -21,12 +21,13 @@ public class GlowParticle extends Particle {
 
     private final Vector3f startColor;
     private final Vector3f endColor;
+    private final float baseSize;
 
     protected GlowParticle(ClientLevel level, double x, double y, double z, double vx, double vy, double vz, GlowParticleOptions options) {
         super(level, x, y, z, vx, vy, vz);
         this.friction = 0.96F;
         this.gravity = 0;
-        this.quadSize = 0.1F; // small
+        this.baseSize = 0.1F; // Define our own size field
         this.lifetime = 20 + this.random.nextInt(10);
 
         this.startColor = options.getStartColor();
@@ -72,7 +73,8 @@ public class GlowParticle extends Particle {
             new Vector3f(1.0F, -1.0F, 0.0F)
         };
 
-        float scale = this.getQuadSize(partialTicks);
+        // Use our local size field
+        float scale = this.baseSize;
         Quaternionf quaternion = camera.rotation();
 
         for(int i = 0; i < 4; ++i) {
@@ -84,19 +86,10 @@ public class GlowParticle extends Particle {
                          (float)(Mth.lerp(partialTicks, this.zo, this.z) - camera.getPosition().z));
         }
 
-        // Procedural Glow: Center opaque, edges transparent
-        // We draw 4 triangles meeting at center?
-        // Or just a quad where vertices have 0 alpha?
-        // If we draw a quad with all vertices having Alpha 0, it is invisible.
-        // We need a center point.
-        // Let's draw 4 triangles (Fan)
-
         Vector3f center = new Vector3f(0,0,0);
         center.add((float)(Mth.lerp(partialTicks, this.xo, this.x) - camera.getPosition().x),
                    (float)(Mth.lerp(partialTicks, this.yo, this.y) - camera.getPosition().y),
                    (float)(Mth.lerp(partialTicks, this.zo, this.z) - camera.getPosition().z));
-
-        // Draw 4 triangles: Center -> Corner 1 -> Corner 2
 
         float r = this.rCol;
         float g = this.gCol;
