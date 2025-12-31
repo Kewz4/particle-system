@@ -4,7 +4,6 @@ import net.jules.edge_glow.EdgeGlowMod;
 import net.jules.edge_glow.config.ConfigLoader;
 import net.jules.edge_glow.config.GlowConfig;
 import net.jules.edge_glow.logic.PointCache;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -14,13 +13,16 @@ import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-import java.util.List;
-
 @Mod.EventBusSubscriber(modid = EdgeGlowMod.MODID, value = Dist.CLIENT)
 public class ClientEventHandler {
 
     @SubscribeEvent
     public static void onItemTooltip(ItemTooltipEvent event) {
+        // Force debug tooltip on everything to prove mod is loaded
+        if (event.getFlags().isAdvanced()) {
+             event.getToolTip().add(Component.literal("§d[EdgeGlow] System Active"));
+        }
+
         GlowConfig config = ConfigLoader.ITEM_RULES.get(event.getItemStack().getItem());
         if (config != null) {
             String name = event.getItemStack().getHoverName().getString();
@@ -32,14 +34,13 @@ public class ClientEventHandler {
                 matches = name.matches(pattern);
             }
 
-            event.getToolTip().add(Component.literal("§d[EdgeGlow] Debug Info:"));
+            event.getToolTip().add(Component.literal("§d[EdgeGlow] Rule Found:"));
             event.getToolTip().add(Component.literal("§7 Name: " + name));
             event.getToolTip().add(Component.literal("§7 Pattern: " + pattern));
 
             if (matches) {
                  event.getToolTip().add(Component.literal("§a Match: YES"));
 
-                 // Check Edge Cache
                  try {
                      var itemRenderer = Minecraft.getInstance().getItemRenderer();
                      var model = itemRenderer.getModel(event.getItemStack(), event.getEntity().level(), event.getEntity(), 0);
@@ -50,7 +51,7 @@ public class ClientEventHandler {
                              int count = PointCache.get(spriteId).size();
                              event.getToolTip().add(Component.literal("§a Cached Edges: " + count));
                          } else {
-                             event.getToolTip().add(Component.literal("§e Edges: Not Cached Yet"));
+                             event.getToolTip().add(Component.literal("§e Edges: Not Cached (Wait for render)"));
                          }
                      }
                  } catch (Exception e) {

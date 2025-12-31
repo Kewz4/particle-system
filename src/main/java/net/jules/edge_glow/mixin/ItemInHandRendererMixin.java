@@ -81,9 +81,10 @@ public class ItemInHandRendererMixin {
                 PointCache.put(spriteId, edges);
                 EdgeGlowMod.LOGGER.info("EdgeGlow: Detected {} edges for {}", edges.size(), spriteId);
             } else {
-                PointCache.put(spriteId, List.of());
-                EdgeGlowMod.LOGGER.warn("EdgeGlow: Could not read pixels for {}", spriteId);
-                return;
+                // Fallback: If texture is unreadable (null), use a simple box edge so particles still appear
+                EdgeGlowMod.LOGGER.warn("EdgeGlow: Could not read pixels for {}. Using fallback box.", spriteId);
+                edges = EdgeDetector.getBoxFallback();
+                PointCache.put(spriteId, edges);
             }
         }
 

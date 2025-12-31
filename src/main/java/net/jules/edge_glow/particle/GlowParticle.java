@@ -27,7 +27,7 @@ public class GlowParticle extends Particle {
         super(level, x, y, z, vx, vy, vz);
         this.friction = 0.96F;
         this.gravity = 0;
-        this.baseSize = 0.2F; // Increased size for visibility
+        this.baseSize = 0.2F;
         this.lifetime = 20 + this.random.nextInt(10);
 
         this.startColor = options.getStartColor();
@@ -38,9 +38,10 @@ public class GlowParticle extends Particle {
         this.bCol = startColor.z;
         this.alpha = 1.0f;
 
-        this.xd = vx * 0.05;
-        this.yd = vy * 0.05;
-        this.zd = vz * 0.05;
+        // Initial velocity from mixin
+        this.xd = vx;
+        this.yd = vy;
+        this.zd = vz;
     }
 
     @Override
@@ -51,6 +52,13 @@ public class GlowParticle extends Particle {
         if (this.age++ >= this.lifetime) {
             this.remove();
         } else {
+            // Apply Physics: Sine Wave Motion (simulating the example snippet)
+            // particle.dx += 0.005F * MathHelper.sin(0.3F * player.age);
+            float time = this.age * 0.3F;
+            this.xd += 0.002F * Mth.sin(time);
+            this.zd += 0.002F * Mth.cos(time);
+            this.yd += 0.001F; // Slight rise
+
             // Interpolate color
             float progress = (float)this.age / (float)this.lifetime;
             this.rCol = Mth.lerp(progress, startColor.x, endColor.x);
@@ -73,7 +81,6 @@ public class GlowParticle extends Particle {
             new Vector3f(1.0F, -1.0F, 0.0F)
         };
 
-        // Use our local size field
         float scale = this.baseSize;
         Quaternionf quaternion = camera.rotation();
 
@@ -96,22 +103,19 @@ public class GlowParticle extends Particle {
         float b = this.bCol;
         float a = this.alpha;
 
-        // Triangle 1: Center, 0, 1
+        // Triangle Fan
         vertex(buffer, center, r, g, b, a);
-        vertex(buffer, corners[0], r, g, b, 0); // Edge alpha 0
+        vertex(buffer, corners[0], r, g, b, 0);
         vertex(buffer, corners[1], r, g, b, 0);
 
-        // Triangle 2: Center, 1, 2
         vertex(buffer, center, r, g, b, a);
         vertex(buffer, corners[1], r, g, b, 0);
         vertex(buffer, corners[2], r, g, b, 0);
 
-        // Triangle 3: Center, 2, 3
         vertex(buffer, center, r, g, b, a);
         vertex(buffer, corners[2], r, g, b, 0);
         vertex(buffer, corners[3], r, g, b, 0);
 
-        // Triangle 4: Center, 3, 0
         vertex(buffer, center, r, g, b, a);
         vertex(buffer, corners[3], r, g, b, 0);
         vertex(buffer, corners[0], r, g, b, 0);
@@ -132,11 +136,8 @@ public class GlowParticle extends Particle {
             RenderSystem.disableCull();
             RenderSystem.depthMask(false);
             RenderSystem.enableBlend();
-            // Additive Blending for Glow Effect
             RenderSystem.blendFunc(com.mojang.blaze3d.platform.GlStateManager.SourceFactor.SRC_ALPHA, com.mojang.blaze3d.platform.GlStateManager.DestFactor.ONE);
-            // Disable depth test to ensure it renders on top of the item if clipped
             RenderSystem.disableDepthTest();
-
             RenderSystem.setShader(GameRenderer::getPositionColorShader);
             builder.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
         }
@@ -144,7 +145,6 @@ public class GlowParticle extends Particle {
         @Override
         public void end(Tesselator tesselator) {
             tesselator.end();
-            // Restore default states just in case
             RenderSystem.enableDepthTest();
             RenderSystem.defaultBlendFunc();
         }
@@ -154,7 +154,7 @@ public class GlowParticle extends Particle {
     };
 
     public static class Provider implements ParticleProvider<GlowParticleOptions> {
-        public Provider(Object unused) {} // No SpriteSet needed
+        public Provider(Object unused) {}
 
         @Override
         public Particle createParticle(GlowParticleOptions options, ClientLevel level, double x, double y, double z, double dx, double dy, double dz) {
